@@ -1,139 +1,121 @@
+import {
+  createRootReducer,
+  createSubReducer,
+  composeLenses,
+  createLens
+} from "./index";
+interface Fourth {
+  title: string;
+  age: number;
+}
+
 interface Second {
-    third: string
+  third: string;
+  fourth: Fourth;
 }
 
 interface State {
-    first: number
-    second: Second
+  first: number;
+  second: Second;
 }
 
 const initialState: State = {
-    first: 1,
-    second: {
-        third: "yes"
+  first: 1,
+  second: {
+    third: "yes",
+    fourth: {
+      title: "Senor Ouvo",
+      age: 100
     }
-}
+  }
+};
 
-interface RootReducerFunc<S> { 
-    get: () => S
-    set: (newState: S) => S
-    modify: (f: Map<S>) => S
-}
+const firstLens = createLens<number, State>(
+  state => state.first,
+  value => state => ({
+    ...state,
+    first: value
+  })
+);
 
-type RootReducer<S> = (initialState: S) => RootReducerFunc<S>
+const secondLens = createLens<Second, State>(
+  state => state.second,
+  value => state => ({
+    ...state,
+    second: value
+  })
+);
 
-type Listener<S> = (state: S) => void
+const thirdLens = createLens<string, Second>(
+  state => state.third,
+  value => state => ({
+    ...state,
+    third: value
+  })
+);
 
-const reducer = <S>(initialState: S, listeners: Listener<S>[] = []): RootReducerFunc<S> => {
-    let state: S = initialState
+const fourthLens = createLens<Fourth, Second>(
+  state => state.fourth,
+  value => state => ({
+    ...state,
+    fourth: value
+  })
+);
 
-    const get = () => state
+const titleLens = createLens<string, Fourth>(
+  state => state.title,
+  value => state => ({ ...state, title: value })
+);
 
-    const set = (newState: S) => {
-        state = newState
-        notify(state)
-        return state
-    }
-
-    const modify = (f: Map<S>) => {
-        return set(f(state))
-    }
-
-    const notify = (state: S) => listeners.map(listener => listener(state))
-
-    return {
-        get,
-        set,
-        modify
-    }
-}
-
-type Get<A, S> = (state: S) => A
-
-type Set<A, S> = (value: A) => (state: S) => S
-
-interface Lens<A, S> {
-    get: Get<A, S>
-    set: Set<A, S>
-}
-
-type Map<A> = (value: A) => A
-
-const getFirst: Get<number, State> = (state) => state.first
-
-const setFirst: Set<number, State> = (value) => (state) => ({ ...state, first: value })
-
-const getSecond: Get<Second, State> = (state) => state.second
-
-const setSecond: Set<Second, State> = (value) => (state) => ({ ...state, second: value })
-
-const getThird: Get<string, Second> = (state) => state.third
-
-const setThird: Set<string, Second> = (value) => (state) => ({ ...state, third: value })
-
-const firstLens: Lens<number, State> = { get: getFirst, set: setFirst }
-
-const secondLens: Lens<Second, State> = { get: getSecond, set: setSecond }
-
-const thirdLens: Lens<string, Second> = { get: getThird, set: setThird }
-
-// are we using these
-const get = <A, S>(lens: Lens<A, S>) => (state: S): A => lens.get(state)
-
-const set = <A, S>(lens: Lens<A, S>) => (value: A) => (state: S) => lens.set(value)(state)
-
-const modify = <A, S>(lens: Lens<A, S>) => (func: Map<A>) => (state: S): S => {
-    const newValue = func(lens.get(state))
-    return lens.set(newValue)(state)
-}
+const ageLens = createLens<number, Fourth>(
+  state => state.age,
+  value => state => ({ ...state, age: value })
+);
 
 // yeah
-const double = (i: number)  => i * 2
+const double = (i: number) => i * 2;
 
-const exclaim = (x: string) => x + "!!!"
+const exclaim = (x: string) => x + "!!!";
 
+const fullThreeLens = composeLenses<string, Second, State>(secondLens)(
+  thirdLens
+);
 
-const makeReducerLenser = <A, S>(rootReducer: RootReducerFunc<S>) => (lens: Lens<A, S>, listeners: Listener<A>[] = []) => {
+const fullFourthLens = composeLenses<Fourth, Second, State>(secondLens)(
+  fourthLens
+);
 
-    const get = () => lens.get(rootReducer.get())
+const fullTitleLens = composeLenses<string, Fourth, State>(fullFourthLens)(
+  titleLens
+);
 
-    const set = (value: A) => {
-        notify(value)
-        return rootReducer.set(lens.set(value)(rootReducer.get()))
-    }
+const fullAgeLens = composeLenses<number, Fourth, State>(fullFourthLens)(
+  ageLens
+);
 
-    const modify = (func: Map<A>) => set(func(get()))
+const rootReducer = createRootReducer(initialState, [
+  s => console.warn("rootReducer", s)
+]);
 
-    const notify = (value: A) => listeners.map(s => s(value))
+const firstReducer = createSubReducer<number, State>(rootReducer)(firstLens, [
+  s => console.log("firstReducer", s)
+]);
 
-    return { get, set, modify }
-}
+const threeReducerLens = createSubReducer<string, State>(rootReducer)(
+  fullThreeLens,
+  [s => console.log("thirdReducer", s)]
+);
 
-const composeLenses = <A, B, S>(lens1: Lens<B, S>) => (lens2: Lens<A, B>): Lens<A, S> => ({
-    get: (state: S) => lens2.get(lens1.get(state)),
-    set: (value: A) => (state: S) => {
-        const newValue = lens2.set(value)(lens1.get(state))
-        return lens1.set(newValue)(state)
-    }
-})
+const fullTitleReducer = createSubReducer<string, State>(rootReducer)(
+  fullTitleLens
+);
 
-const fullThreeLens = composeLenses<string, Second, State>(secondLens)(thirdLens)
+const fullAgeReducer = createSubReducer<number, State>(rootReducer)(
+  fullAgeLens
+);
 
-console.log(fullThreeLens.get(initialState))
-
-console.log(fullThreeLens.set('dog')(initialState))
-
-const rootReducer = reducer(initialState, [s => console.warn('rootReducer', s)])
-
-const firstReducerLens = makeReducerLenser<number, State>(rootReducer)(firstLens, [s => console.log('firstReducer', s)])
-
-const threeReducerLens = makeReducerLenser<string, State>(rootReducer)(fullThreeLens, [s => console.log('thirdReducer', s)])
-
-firstReducerLens.set(10)
-firstReducerLens.modify(double)
-threeReducerLens.modify(exclaim)
-
-console.log('all', rootReducer.get())
-
-
-
+firstReducer.set(10);
+firstReducer.modify(double);
+threeReducerLens.modify(exclaim);
+fullTitleReducer.modify(str => str.toUpperCase());
+fullAgeReducer.modify(double);
