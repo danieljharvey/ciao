@@ -2,8 +2,8 @@ import { secondLens, rootReducer } from '../store'
 import { createSubReducer, createLens, composeLenses } from '../../index'
 import { State } from '../state'
 import { Second } from './secondState'
-import { Fourth } from './fourth'
-import { Third } from './third'
+import { Fourth } from './fourth/fourthState'
+import { Third } from './third/thirdState'
 
 export const thirdLens = composeLenses<Third, Second, State>(secondLens)(createLens(
   state => state.third,

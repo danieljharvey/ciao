@@ -6,7 +6,7 @@ import {
 } from "../index";
 
 import { initialState, State } from './state'
-import { Second } from './second'
+import { Second } from './second/secondState'
 
 export const firstLens = createLens<number, State>(
   state => state.first,

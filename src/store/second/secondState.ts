@@ -1,5 +1,5 @@
-import { thirdState, Third } from './third'
-import { fourthState, Fourth } from './fourth'
+import { thirdState, Third } from './third/thirdState'
+import { fourthState, Fourth } from './fourth/fourthState'
 
 export interface Second {
   third: Third;
