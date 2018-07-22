@@ -1,0 +1,1 @@
+export const firstState: number = 1

@@ -9,7 +9,7 @@
     "tsc": "tsc",
     "tsc:watch": "tsc -w --pretty",
     "tsc:check": "tsc -w --noEmit --pretty",
-    "start": "ts-node ./src/lens.ts"
+    "start": "ts-node ./src/test.ts"
   },
   "jest": {
     "transform": {

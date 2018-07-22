@@ -1,4 +1,4 @@
-interface RootReducerFunc<S> {
+export interface RootReducerFunc<S> {
   get: () => S;
   set: (newState: S) => S;
   modify: (f: Map<S>) => S;
@@ -50,17 +50,6 @@ export const createRootReducer = <S>(
     set,
     modify
   };
-};
-
-// are we using these
-const get = <A, S>(lens: Lens<A, S>) => (state: S): A => lens.get(state);
-
-const set = <A, S>(lens: Lens<A, S>) => (value: A) => (state: S) =>
-  lens.set(value)(state);
-
-const modify = <A, S>(lens: Lens<A, S>) => (func: Map<A>) => (state: S): S => {
-  const newValue = func(lens.get(state));
-  return lens.set(newValue)(state);
 };
 
 export const createSubReducer = <A, S>(rootReducer: RootReducerFunc<S>) => (
