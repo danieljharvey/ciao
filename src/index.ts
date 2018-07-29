@@ -13,10 +13,7 @@ export interface Lens<A, S> {
   set: Set<A, S>;
 }
 
-export const createLens = <A, S>(
-  getter: Get<A, S>,
-  setter: Set<A, S>
-): Lens<A, S> => ({
+export const createLens = <A, S>(getter: Get<A, S>, setter: Set<A, S>): Lens<A, S> => ({
   get: getter,
   set: setter
 });
@@ -25,10 +22,7 @@ type Map<A> = (value: A) => A;
 
 type Listener<S> = (state: S) => void;
 
-export const createRootReducer = <S>(
-  initialState: S,
-  listeners: Listener<S>[] = []
-): RootReducerFunc<S> => {
+export const createRootReducer = <S>(initialState: S, listeners: Listener<S>[] = []): RootReducerFunc<S> => {
   let state: S = initialState;
 
   const get = () => state;
@@ -65,14 +59,14 @@ export const createSubReducer = <A, S>(rootReducer: RootReducerFunc<S>) => (
 
   const modify = (func: Map<A>) => set(func(get()));
 
+  const compose = <C>(lens2: Lens<C, A>) => composeLenses<C, A, S>(lens)(lens2);
+
   const notify = (value: A) => listeners.map(s => s(value));
 
-  return { get, set, modify };
+  return { get, set, modify, compose };
 };
 
-export const composeLenses = <A, B, S>(lens1: Lens<B, S>) => (
-  lens2: Lens<A, B>
-): Lens<A, S> => ({
+export const composeLenses = <A, B, S>(lens1: Lens<B, S>) => (lens2: Lens<A, B>): Lens<A, S> => ({
   get: (state: S) => lens2.get(lens1.get(state)),
   set: (value: A) => (state: S) => {
     const newValue = lens2.set(value)(lens1.get(state));

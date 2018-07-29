@@ -1,12 +1,9 @@
-import {
-  createRootReducer,
-  createSubReducer,
-  composeLenses,
-  createLens
-} from "../index";
+import { createRootReducer, createLens } from "../index";
 
-import { initialState, State } from './state'
-import { Second } from './second/secondState'
+import { initialState, State } from "./state";
+import { Second } from "./second/secondState";
+
+export const rootReducer = createRootReducer(initialState, [console.dir]);
 
 export const firstLens = createLens<number, State>(
   state => state.first,
@@ -23,8 +20,3 @@ export const secondLens = createLens<Second, State>(
     second: value
   })
 );
-
-export const rootReducer = createRootReducer(initialState, [
-  console.dir
-]);
-
